@@ -12,6 +12,13 @@ const { d1, r2 } = hostingConfig;
 // macOS Seatbelt blocks FSEvents, so Codex previews need polling for HMR.
 const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
 
+// Nitro builds for Vercel's Node runtime, which is a different target from the
+// Cloudflare Worker that vinext, wrangler, and the tests all expect. Loading it
+// unconditionally lets it take over the server build: dist/server/index.js stops
+// being emitted, which breaks `npm run dev`, `npm start`, and `npm test` at once.
+// Enable it only when a Vercel build explicitly asks for it via NITRO_PRESET.
+const isNitroBuild = Boolean(process.env.NITRO_PRESET);
+
 const localBindingConfig = {
   main: "./worker/index.ts",
   compatibility_flags: ["nodejs_compat"],
@@ -50,7 +57,7 @@ export default defineConfig(async () => {
       : undefined,
     plugins: [
       vinext(),
-      nitro(),
+      ...(isNitroBuild ? [nitro()] : []),
       sites(),
       cloudflare({
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },

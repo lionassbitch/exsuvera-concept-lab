@@ -1,0 +1,89 @@
+.academyPage{background:#0d1420;color:#e9e6dd;min-height:100vh}
+.academyPage .pocNav{border-bottom:1px solid #242e44}
+.academyPage a{color:inherit}
+.academyPage :focus-visible{outline:2px solid #c6ff4a;outline-offset:3px}
+
+.academyHero{padding:7vw 6vw 4vw;display:flex;flex-direction:column;gap:22px}
+.academyHero h1{font-family:var(--serif);font-size:clamp(3.5rem,10vw,8rem);line-height:.88;letter-spacing:-.04em;margin:0}
+.academyHero h1 em{color:#c6ff4a;font-weight:400;font-style:normal}
+.academyHero .lead{color:#9aa2ba;max-width:38rem}
+.academyPage .tag{color:#9aa2ba;margin:0}
+.academyTagline{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#c6ff4a;margin:0}
+
+.academyThesis{padding:5vw 6vw 7vw;border-top:1px solid #242e44;display:flex;flex-direction:column;gap:18px;max-width:46rem}
+.academyThesis h2{font-family:var(--serif);font-size:clamp(2rem,5vw,3.5rem);line-height:1.05;margin:0;font-weight:400}
+.academyThesis p{color:#9aa2ba;line-height:1.7;margin:0}
+
+/* phase grid */
+.phaseGrid{padding:0 6vw 7vw;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#242e44;border:1px solid #242e44}
+.phaseCard{background:#0d1420;padding:clamp(1.25rem,3vw,2rem);display:flex;flex-direction:column;gap:.75rem;min-height:280px;transition:background .2s}
+.phaseCard:hover,.phaseCard:focus-visible{background:#141c2c}
+.phaseCard .num{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#c6ff4a}
+.phaseCard h3{font-family:var(--serif);font-size:clamp(1.6rem,3vw,2.2rem);line-height:1.05;margin:0;font-weight:400}
+.phaseCard .phaseTag{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#9aa2ba}
+.phaseCard p{color:#9aa2ba;font-size:.9375rem;line-height:1.55;margin:0;flex:1}
+.phaseCard .meta{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#6b7488;margin-top:auto}
+
+/* phase detail */
+.phaseHero{padding:7vw 6vw 4vw;display:flex;flex-direction:column;gap:20px;max-width:52rem}
+.phaseHero h1{font-family:var(--serif);font-size:clamp(2.8rem,8vw,6rem);line-height:.92;letter-spacing:-.03em;margin:0;font-weight:400}
+.phaseHero h1 em{color:#c6ff4a;font-style:normal;font-weight:400}
+.phaseOutcome{background:#141c2c;border:1px solid #242e44;padding:1.5rem 1.75rem;display:flex;flex-direction:column;gap:.5rem}
+.phaseOutcome b{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#c6ff4a}
+.phaseOutcome p{color:#e9e6dd;margin:0;line-height:1.6}
+
+.lessonList{padding:2vw 6vw 7vw;display:flex;flex-direction:column;gap:0;max-width:52rem}
+.lessonList>.tag{margin-bottom:1.5rem}
+.lessonRow{display:grid;grid-template-columns:auto 1fr auto;gap:1.25rem 1.5rem;align-items:baseline;padding:1.35rem 0;border-top:1px solid #242e44;text-decoration:none;transition:color .15s}
+.lessonRow:hover,.lessonRow:focus-visible{color:#c6ff4a}
+.lessonRow .idx{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:#6b7488}
+.lessonRow h3{font-family:var(--serif);font-size:clamp(1.35rem,3vw,1.75rem);margin:0;font-weight:400;line-height:1.15}
+.lessonRow .dur{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:#9aa2ba;white-space:nowrap}
+.lessonRow p{grid-column:2/-1;color:#9aa2ba;font-size:.9375rem;line-height:1.55;margin:0}
+
+/* lesson detail */
+.lessonHero{padding:7vw 6vw 3vw;display:flex;flex-direction:column;gap:16px;max-width:46rem}
+.lessonHero h1{font-family:var(--serif);font-size:clamp(2.2rem,6vw,4rem);line-height:1.05;margin:0;font-weight:400}
+.lessonMeta{display:flex;flex-wrap:wrap;gap:1rem;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#9aa2ba}
+.lessonMeta .idx{color:#c6ff4a}
+
+.lessonBody{padding:2vw 6vw 4vw;max-width:46rem;display:flex;flex-direction:column;gap:2rem}
+.objectives{background:#141c2c;border:1px solid #242e44;padding:1.5rem 1.75rem;display:flex;flex-direction:column;gap:.75rem}
+.objectives b{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#c6ff4a}
+.objectives ul{margin:0;padding:0 0 0 1.1rem;display:flex;flex-direction:column;gap:.45rem}
+.objectives li{color:#e9e6dd;line-height:1.55;font-size:.9375rem}
+
+.prose{display:flex;flex-direction:column;gap:1.1rem}
+.prose p{color:#9aa2ba;line-height:1.75;margin:0;font-size:1.02rem}
+
+.exercise{background:#141c2c;border-left:2px solid #c6ff4a;padding:1.5rem 1.75rem;display:flex;flex-direction:column;gap:.65rem}
+.exercise b{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#c6ff4a}
+.exercise .prompt{color:#e9e6dd;line-height:1.65;margin:0;font-size:1rem}
+.exercise .deliv{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#9aa2ba;margin:0}
+
+.toolLink{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#c6ff4a;border:1px solid #242e44;padding:.75rem 1.25rem;align-self:flex-start;transition:border-color .15s,background .15s}
+.toolLink:hover,.toolLink:focus-visible{border-color:#c6ff4a;background:#141c2c}
+
+.lessonNav{display:flex;justify-content:space-between;gap:1.5rem;padding:2rem 6vw 5vw;border-top:1px solid #242e44;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+.lessonNav a{display:flex;flex-direction:column;gap:.35rem;max-width:45%}
+.lessonNav a span{color:#9aa2ba}
+.lessonNav a b{color:#c6ff4a;font-weight:400}
+.lessonNav .next{align-items:flex-end;text-align:right;margin-left:auto}
+
+.progressBar{padding:0 6vw 2vw}
+.progressTrack{height:2px;background:#242e44;position:relative}
+.progressFill{height:100%;background:#c6ff4a;transition:width .3s}
+.progressLabel{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6b7488;margin:0 0 .5rem}
+
+.academyPage .source{border-top:1px solid #242e44;color:#9aa2ba}
+
+@media(max-width:900px){
+  .phaseGrid{grid-template-columns:1fr}
+  .lessonRow{grid-template-columns:1fr;gap:.35rem}
+  .lessonRow .idx,.lessonRow .dur{display:none}
+  .lessonNav{flex-direction:column}
+  .lessonNav .next{align-items:flex-start;text-align:left;margin-left:0}
+}
+@media(prefers-reduced-motion:reduce){
+  .academyPage *{transition:none !important;animation:none !important}
+}

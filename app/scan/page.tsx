@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ScanClient from "./ScanClient";
+import { HandwritingText } from "@/components/ui/handwriting-text";
 import "../scan/scan.css";
 
 export const metadata = {
@@ -55,7 +56,17 @@ export default async function ScanPage() {
         <h1>
           It isn&apos;t listening
           <br />
-          to your <em>answer</em>.
+          to your{" "}
+          <em>
+            {/* Each word completes the sentence with something the engine ignores —
+                it reads how the answer is produced, not the answer itself. The pen
+                stroke is the same idea made visible: the trace, not the text. */}
+            <HandwritingText
+              words={["answer.", "pitch.", "story.", "confidence."]}
+              interval={3600}
+              height="1.05em"
+            />
+          </em>
         </h1>
         <p className="lead">
           It measures how you produce it — where you start fast, where you stall, where you

@@ -34,10 +34,11 @@ test("renders LAB Academy hub and a lesson", async () => {
   assert.match(hubHtml, /LAB Academy/i);
   assert.match(hubHtml, /sharpen my vision/i);
   assert.match(hubHtml, /Orientation/);
+  assert.match(hubHtml, /backend progress/i);
 
   const lesson = await render("/academy/orientation/uncertainty-audit");
   assert.equal(lesson.status, 200);
   const lessonHtml = await lesson.text();
   assert.match(lessonHtml, /The uncertainty audit/);
-  assert.match(lessonHtml, /Deliverable/);
+  assert.match(lessonHtml, /Save deliverable|Deliverable/i);
 });

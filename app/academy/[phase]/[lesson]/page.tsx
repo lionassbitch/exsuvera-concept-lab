@@ -8,7 +8,7 @@ import {
   getPhase,
   getTotalLessons,
 } from "../../../../content/academy/curriculum";
-import "../../academy.css";
+import { ExerciseWorkspace } from "../../ExerciseWorkspace";
 
 type Props = { params: Promise<{ phase: string; lesson: string }> };
 
@@ -38,13 +38,15 @@ export default async function LessonPage({ params }: Props) {
   const total = getTotalLessons();
   const { prev, next } = getAdjacentLessons(phaseSlug, lessonSlug);
   const pct = Math.round((index / total) * 100);
+  const lessonNum =
+    phase.lessons.findIndex((l) => l.slug === lessonSlug) + 1;
 
   return (
     <main className="academyPage">
       <nav className="pocNav">
         <Link href={`/academy/${phase.slug}`}>← {phase.title}</Link>
         <b>
-          {phase.number}.{String(phase.lessons.findIndex((l) => l.slug === lessonSlug) + 1).padStart(2, "0")}
+          {phase.number}.{String(lessonNum).padStart(2, "0")}
         </b>
         <Link href="/academy">Academy</Link>
       </nav>
@@ -88,13 +90,15 @@ export default async function LessonPage({ params }: Props) {
           ))}
         </div>
 
-        {lesson.exercise && (
-          <div className="exercise">
-            <b>Exercise · {lesson.exercise.time}</b>
-            <p className="prompt">{lesson.exercise.prompt}</p>
-            <p className="deliv">Deliverable → {lesson.exercise.deliverable}</p>
-          </div>
-        )}
+        {lesson.exercise ? (
+          <ExerciseWorkspace
+            phaseSlug={phase.slug}
+            lessonSlug={lesson.slug}
+            title={lesson.exercise.deliverable}
+            prompt={lesson.exercise.prompt}
+            time={lesson.exercise.time}
+          />
+        ) : null}
 
         {lesson.toolLink && (
           <Link href={lesson.toolLink.href} className="toolLink">

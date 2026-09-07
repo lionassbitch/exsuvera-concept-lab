@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAllPhases, getPhase } from "../../../content/academy/curriculum";
-import "../academy.css";
+import { PhaseLessonList } from "../PhaseLessonList";
 
 type Props = { params: Promise<{ phase: string }> };
 
@@ -48,23 +48,11 @@ export default async function PhasePage({ params }: Props) {
         </div>
       </section>
 
-      <section className="lessonList" id="lessons">
-        <p className="tag">{phase.lessons.length} lessons</p>
-        {phase.lessons.map((lesson, i) => (
-          <Link
-            key={lesson.slug}
-            href={`/academy/${phase.slug}/${lesson.slug}`}
-            className="lessonRow"
-          >
-            <span className="idx">
-              {phase.number}.{String(i + 1).padStart(2, "0")}
-            </span>
-            <h3>{lesson.title}</h3>
-            <span className="dur">{lesson.duration}</span>
-            <p>{lesson.summary}</p>
-          </Link>
-        ))}
-      </section>
+      <PhaseLessonList
+        phaseSlug={phase.slug}
+        phaseNumber={phase.number}
+        lessons={phase.lessons}
+      />
 
       <footer className="source">
         <Link href="/academy">All phases</Link>

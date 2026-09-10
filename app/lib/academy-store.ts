@@ -73,11 +73,17 @@ async function getD1(): Promise<D1Like | null> {
   return d1Ready;
 }
 
+async function runSql(db: D1Like, query: string) {
+  await db.prepare(query).bind().run();
+}
+
 async function ensureD1Schema(db: D1Like) {
   if (!schemaReady) {
     schemaReady = (async () => {
-      await db.exec(`
-        CREATE TABLE IF NOT EXISTS academy_progress (
+      // Local Miniflare D1 rejects multi-statement exec batches — run one at a time.
+      await runSql(
+        db,
+        `CREATE TABLE IF NOT EXISTS academy_progress (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           learner_id TEXT NOT NULL,
           phase_slug TEXT NOT NULL,
@@ -85,10 +91,16 @@ async function ensureD1Schema(db: D1Like) {
           status TEXT NOT NULL DEFAULT 'completed',
           completed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
           updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE UNIQUE INDEX IF NOT EXISTS academy_progress_learner_lesson
-          ON academy_progress (learner_id, phase_slug, lesson_slug);
-        CREATE TABLE IF NOT EXISTS academy_deliverables (
+        )`
+      );
+      await runSql(
+        db,
+        `CREATE UNIQUE INDEX IF NOT EXISTS academy_progress_learner_lesson
+          ON academy_progress (learner_id, phase_slug, lesson_slug)`
+      );
+      await runSql(
+        db,
+        `CREATE TABLE IF NOT EXISTS academy_deliverables (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           learner_id TEXT NOT NULL,
           phase_slug TEXT NOT NULL,
@@ -97,19 +109,36 @@ async function ensureD1Schema(db: D1Like) {
           body TEXT NOT NULL DEFAULT '',
           created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
           updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE UNIQUE INDEX IF NOT EXISTS academy_deliverables_learner_lesson
-          ON academy_deliverables (learner_id, phase_slug, lesson_slug);
-      `);
-    })();
+        )`
+      );
+      await runSql(
+        db,
+        `CREATE UNIQUE INDEX IF NOT EXISTS academy_deliverables_learner_lesson
+          ON academy_deliverables (learner_id, phase_slug, lesson_slug)`
+      );
+    })().catch((error) => {
+      schemaReady = null;
+      throw error;
+    });
   }
   await schemaReady;
 }
 
-export async function listProgress(learnerId: string): Promise<ProgressRow[]> {
+/** Prefer D1 when healthy; otherwise fall back to memory so the product still works. */
+async function getHealthyD1(): Promise<D1Like | null> {
   const db = await getD1();
-  if (db) {
+  if (!db) return null;
+  try {
     await ensureD1Schema(db);
+    return db;
+  } catch {
+    return null;
+  }
+}
+
+export async function listProgress(learnerId: string): Promise<ProgressRow[]> {
+  const db = await getHealthyD1();
+  if (db) {
     const { results } = await db
       .prepare(
         `SELECT phase_slug as phaseSlug, lesson_slug as lessonSlug, status, completed_at as completedAt
@@ -145,9 +174,8 @@ export async function upsertProgress(input: {
     completedAt: now,
   };
 
-  const db = await getD1();
+  const db = await getHealthyD1();
   if (db) {
-    await ensureD1Schema(db);
     await db
       .prepare(
         `INSERT INTO academy_progress (learner_id, phase_slug, lesson_slug, status, completed_at, updated_at)
@@ -179,9 +207,8 @@ export async function getDeliverable(
   phaseSlug: string,
   lessonSlug: string
 ): Promise<DeliverableRow | null> {
-  const db = await getD1();
+  const db = await getHealthyD1();
   if (db) {
-    await ensureD1Schema(db);
     return db
       .prepare(
         `SELECT phase_slug as phaseSlug, lesson_slug as lessonSlug, title, body, updated_at as updatedAt
@@ -201,9 +228,8 @@ export async function getDeliverable(
 export async function listDeliverables(
   learnerId: string
 ): Promise<DeliverableRow[]> {
-  const db = await getD1();
+  const db = await getHealthyD1();
   if (db) {
-    await ensureD1Schema(db);
     const { results } = await db
       .prepare(
         `SELECT phase_slug as phaseSlug, lesson_slug as lessonSlug, title, body, updated_at as updatedAt
@@ -241,9 +267,8 @@ export async function upsertDeliverable(input: {
     updatedAt: now,
   };
 
-  const db = await getD1();
+  const db = await getHealthyD1();
   if (db) {
-    await ensureD1Schema(db);
     await db
       .prepare(
         `INSERT INTO academy_deliverables (learner_id, phase_slug, lesson_slug, title, body, created_at, updated_at)

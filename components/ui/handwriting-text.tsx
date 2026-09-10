@@ -22,11 +22,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
  *    it together with the outer contour. Fill the split paths individually and every
  *    letter becomes a blob.
  *
- * The glyph parsing is done by opentype.js, loaded from a CDN as a plain <script> at
- * first use rather than imported as a package. That keeps the component installable
- * anywhere with no dependency to add, and a <script> tag sidesteps the ESM/CJS interop
- * that a bundled import of this particular library tends to trip over. It is fetched once
- * per page and cached by the browser.
+ * The glyph parsing is done by opentype.js, injected as a plain <script> at first use
+ * rather than imported as a package. A <script> tag sidesteps the ESM/CJS interop that a
+ * bundled import of this particular library tends to trip over, and it stays out of the
+ * main bundle for every page that never renders this component. It is fetched once per
+ * page and cached by the browser.
+ *
+ * Both the library and the font are served from this origin (public/vendor and
+ * public/fonts). The upstream component defaults to third-party CDNs, which the font
+ * itself warns against for production: a CDN outage would silently drop every visitor to
+ * the plain-text fallback, and the font request is cross-origin, so it also needs CORS to
+ * be readable at all. Pass `fontUrl` to override.
  *
  * If either the library or the font fails to load, the component renders the text as an
  * ordinary <span> — it degrades to plain text rather than to nothing.
@@ -34,10 +40,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
  * Colour comes from `currentColor`, so `className="text-emerald-600"` styles it.
  */
 
-const OPENTYPE_CDN = "https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js";
+const OPENTYPE_SRC = "/vendor/opentype.min.js";
 
-const DEFAULT_FONT_URL =
-  "https://cdn.21st.dev/assets/mirror/13/1347863151acdc00fa281daaba1a3543dbce5870b55f9cf7479a15bb84007681.ttf";
+const DEFAULT_FONT_URL = "/fonts/handwriting.ttf";
 
 export interface HandwritingTextProps {
   /** A single phrase to write. Ignored when `words` is given. */
@@ -46,7 +51,7 @@ export interface HandwritingTextProps {
   words?: string[];
   /** Milliseconds each word is held before the next one starts. */
   interval?: number;
-  /** URL of a .ttf or .otf. Must be CORS-readable; self-host for production. */
+  /** URL of a .ttf or .otf. Cross-origin sources must be CORS-readable. */
   fontUrl?: string;
   /** Seconds for the pen to cross the whole word. */
   duration?: number;
@@ -82,7 +87,7 @@ function loadOpentype(): Promise<any> {
   if (!libPromise) {
     libPromise = new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = OPENTYPE_CDN;
+      script.src = OPENTYPE_SRC;
       script.async = true;
       script.onload = () => {
         const lib = (window as any).opentype;

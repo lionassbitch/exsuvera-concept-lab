@@ -12,6 +12,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Third-party code we vendor rather than author: linting a minified
+    // bundle produces hundreds of findings nobody can or should act on.
+    "public/vendor/**",
+    // Build outputs.
+    "dist/**",
+    ".output/**",
+    ".vercel/**",
   ]),
 ]);
 

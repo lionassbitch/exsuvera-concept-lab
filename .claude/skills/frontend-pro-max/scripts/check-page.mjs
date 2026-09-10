@@ -167,14 +167,29 @@ for (const width of widths) {
         .filter((el) => {
           const r = el.getBoundingClientRect();
           if (r.width === 0 || r.height === 0) return false;   // hidden
-          return r.width < 44 || r.height < 44;
+          // A ::before/::after can legitimately carry the hit area for a
+          // control whose visible box must stay small — a pagination dot, a
+          // close cross. Measuring only the element's own rect reports those
+          // as failures when the real touch target is fine.
+          let w = r.width, h = r.height;
+          for (const pseudo of ["::after", "::before"]) {
+            const cs = getComputedStyle(el, pseudo);
+            if (!cs || cs.content === "none" || cs.position !== "absolute") continue;
+            w = Math.max(w, parseFloat(cs.width) || 0);
+            h = Math.max(h, parseFloat(cs.height) || 0);
+          }
+          el.__hit = { w, h };
+          return w < 44 || h < 44;
         })
         .slice(0, 8)
         .map((el) => {
           const r = el.getBoundingClientRect();
+          const hit = el.__hit || { w: r.width, h: r.height };
           const label = (el.getAttribute("aria-label") || el.textContent || "")
             .trim().slice(0, 30);
-          return `${el.tagName.toLowerCase()} "${label}" ${Math.round(r.width)}×${Math.round(r.height)}`;
+          const grown = Math.round(hit.w) !== Math.round(r.width) || Math.round(hit.h) !== Math.round(r.height);
+          return `${el.tagName.toLowerCase()} "${label}" ${Math.round(hit.w)}×${Math.round(hit.h)}` +
+                 (grown ? ` (box ${Math.round(r.width)}×${Math.round(r.height)}, hit area extended)` : "");
         });
     });
     if (small.length) {

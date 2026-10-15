@@ -768,10 +768,14 @@ export function getLessonIndex(phaseSlug: string, lessonSlug: string) {
   return 0;
 }
 
-export function getAdjacentLessons(phaseSlug: string, lessonSlug: string) {
-  const flat = curriculum.phases.flatMap((p) =>
+export function getFlatLessons() {
+  return curriculum.phases.flatMap((p) =>
     p.lessons.map((l) => ({ phase: p, lesson: l }))
   );
+}
+
+export function getAdjacentLessons(phaseSlug: string, lessonSlug: string) {
+  const flat = getFlatLessons();
   const i = flat.findIndex(
     (x) => x.phase.slug === phaseSlug && x.lesson.slug === lessonSlug
   );
@@ -779,4 +783,21 @@ export function getAdjacentLessons(phaseSlug: string, lessonSlug: string) {
     prev: i > 0 ? flat[i - 1] : null,
     next: i < flat.length - 1 ? flat[i + 1] : null,
   };
+}
+
+export function getNextIncompleteLesson(
+  completed: { phaseSlug: string; lessonSlug: string }[]
+) {
+  const done = new Set(
+    completed.map((row) => `${row.phaseSlug}::${row.lessonSlug}`)
+  );
+  return (
+    getFlatLessons().find(
+      ({ phase, lesson }) => !done.has(`${phase.slug}::${lesson.slug}`)
+    ) ?? null
+  );
+}
+
+export function getFirstLesson() {
+  return getFlatLessons()[0] ?? null;
 }

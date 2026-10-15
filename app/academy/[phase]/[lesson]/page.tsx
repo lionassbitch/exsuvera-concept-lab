@@ -9,6 +9,7 @@ import {
   getTotalLessons,
 } from "../../../../content/academy/curriculum";
 import { ExerciseWorkspace } from "../../ExerciseWorkspace";
+import { LessonShell } from "../../LessonShell";
 
 type Props = { params: Promise<{ phase: string; lesson: string }> };
 
@@ -43,97 +44,92 @@ export default async function LessonPage({ params }: Props) {
 
   return (
     <main className="academyPage">
-      <nav className="pocNav">
-        <Link href={`/academy/${phase.slug}`}>← {phase.title}</Link>
-        <b>
-          {phase.number}.{String(lessonNum).padStart(2, "0")}
-        </b>
-        <Link href="/academy">Academy</Link>
-      </nav>
-
-      <div className="progressBar">
-        <p className="progressLabel">
-          Lesson {index} of {total}
-        </p>
-        <div className="progressTrack">
-          <div className="progressFill" style={{ width: `${pct}%` }} />
+      <LessonShell>
+        <div className="progressBar">
+          <p className="progressLabel">
+            Lesson {index} of {total} · Phase {phase.number}.{String(lessonNum).padStart(2, "0")}
+          </p>
+          <div className="progressTrack" aria-hidden="true">
+            <div className="progressFill" style={{ width: `${pct}%` }} />
+          </div>
         </div>
-      </div>
 
-      <section className="lessonHero">
-        <p className="tag">
-          Phase {phase.number} · {phase.title}
-        </p>
-        <h1>{lesson.title}</h1>
-        <div className="lessonMeta">
-          <span className="idx">
-            {index}/{total}
-          </span>
-          <span>{lesson.duration}</span>
-        </div>
-        <p className="lead">{lesson.summary}</p>
-      </section>
+        <section className="lessonHero">
+          <p className="tag">
+            Phase {phase.number} · {phase.title}
+          </p>
+          <h1>{lesson.title}</h1>
+          <div className="lessonMeta">
+            <span className="idx">
+              {index}/{total}
+            </span>
+            <span>{lesson.duration}</span>
+          </div>
+          <p className="lead">{lesson.summary}</p>
+        </section>
 
-      <section className="lessonBody">
-        <div className="objectives">
-          <b>Objectives</b>
-          <ul>
-            {lesson.objectives.map((o) => (
-              <li key={o}>{o}</li>
+        <section className="lessonBody">
+          <div className="objectives">
+            <b>Objectives</b>
+            <ul>
+              {lesson.objectives.map((o) => (
+                <li key={o}>{o}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="prose">
+            {lesson.body.map((para) => (
+              <p key={para.slice(0, 40)}>{para}</p>
             ))}
-          </ul>
-        </div>
+          </div>
 
-        <div className="prose">
-          {lesson.body.map((para) => (
-            <p key={para.slice(0, 40)}>{para}</p>
-          ))}
-        </div>
+          {lesson.exercise ? (
+            <ExerciseWorkspace
+              phaseSlug={phase.slug}
+              lessonSlug={lesson.slug}
+              title={lesson.exercise.deliverable}
+              prompt={lesson.exercise.prompt}
+              time={lesson.exercise.time}
+            />
+          ) : null}
 
-        {lesson.exercise ? (
-          <ExerciseWorkspace
-            phaseSlug={phase.slug}
-            lessonSlug={lesson.slug}
-            title={lesson.exercise.deliverable}
-            prompt={lesson.exercise.prompt}
-            time={lesson.exercise.time}
-          />
-        ) : null}
+          {lesson.toolLink && (
+            <Link href={lesson.toolLink.href} className="toolLink">
+              {lesson.toolLink.label}
+            </Link>
+          )}
+        </section>
 
-        {lesson.toolLink && (
-          <Link href={lesson.toolLink.href} className="toolLink">
-            {lesson.toolLink.label}
-          </Link>
-        )}
-      </section>
-
-      <nav className="lessonNav" aria-label="Lesson navigation">
-        {prev ? (
-          <Link href={`/academy/${prev.phase.slug}/${prev.lesson.slug}`}>
-            <span>Previous</span>
-            <b>{prev.lesson.title}</b>
-          </Link>
-        ) : (
-          <span />
-        )}
-        {next ? (
-          <Link
-            href={`/academy/${next.phase.slug}/${next.lesson.slug}`}
-            className="next"
-          >
-            <span>Next</span>
-            <b>{next.lesson.title}</b>
-          </Link>
-        ) : (
-          <Link href="/academy" className="next">
-            <span>Complete</span>
-            <b>Return to Academy →</b>
-          </Link>
-        )}
-      </nav>
+        <nav className="lessonNav" aria-label="Lesson navigation">
+          {prev ? (
+            <Link href={`/academy/${prev.phase.slug}/${prev.lesson.slug}`}>
+              <span>Previous</span>
+              <b>{prev.lesson.title}</b>
+            </Link>
+          ) : (
+            <span />
+          )}
+          {next ? (
+            <Link
+              href={`/academy/${next.phase.slug}/${next.lesson.slug}`}
+              className="next"
+            >
+              <span>Next</span>
+              <b>{next.lesson.title}</b>
+            </Link>
+          ) : (
+            <Link href="/academy/deliverables" className="next">
+              <span>Complete</span>
+              <b>View deliverables →</b>
+            </Link>
+          )}
+        </nav>
+      </LessonShell>
 
       <footer className="source">
         <span>{lesson.exercise?.deliverable ?? phase.outcome}</span>
+        <Link href="/academy">Academy</Link>
         <span>Exsuvera × LAB</span>
       </footer>
     </main>

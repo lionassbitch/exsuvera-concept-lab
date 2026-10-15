@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAcademy } from "./AcademyProvider";
+import { AcademyShell } from "./AcademyShell";
 import type { Phase } from "../../content/academy/types";
 
 export function AcademyHubClient({
@@ -19,14 +20,15 @@ export function AcademyHubClient({
   tagline: string;
   title: string;
 }) {
-  const { ready, completedCount, isComplete } = useAcademy();
+  const { ready, completedCount, isComplete, next } = useAcademy();
   const pct = totalLessons
     ? Math.round((completedCount / totalLessons) * 100)
     : 0;
   const words = title.split(" ");
+  const done = completedCount === totalLessons && totalLessons > 0;
 
   return (
-    <>
+    <AcademyShell active="curriculum">
       <section className="academyHero">
         <p className="tag">{subtitle}</p>
         <p className="academyTagline">{tagline}</p>
@@ -37,16 +39,39 @@ export function AcademyHubClient({
         </h1>
         <p className="lead">
           {phases.length} phases · {totalLessons} lessons · one path from
-          uncertainty to execution. Frontend curriculum, backend progress —
-          every deliverable you write is stored against your learner identity.
+          uncertainty to execution. Progress and deliverables persist to the
+          academy backend — sign in to keep them across devices.
         </p>
+
+        <div className="hubActions">
+          {next && !done ? (
+            <Link
+              href={`/academy/${next.phaseSlug}/${next.lessonSlug}`}
+              className="pill blue"
+            >
+              {completedCount === 0
+                ? `Start · ${next.title}`
+                : `Resume · ${next.title}`}
+            </Link>
+          ) : (
+            <Link href="/academy/deliverables" className="pill blue">
+              View your deliverables
+            </Link>
+          )}
+          <Link href="/academy/deliverables" className="pill plainBtn">
+            Deliverables library
+          </Link>
+        </div>
+
         <div className="hubProgress">
           <p className="progressLabel">
             {ready
-              ? `${completedCount} of ${totalLessons} lessons complete · ${pct}%`
+              ? done
+                ? `Curriculum complete · ${totalLessons}/${totalLessons}`
+                : `${completedCount} of ${totalLessons} lessons complete · ${pct}%`
               : "Loading progress…"}
           </p>
-          <div className="progressTrack">
+          <div className="progressTrack" aria-hidden="true">
             <div className="progressFill" style={{ width: `${pct}%` }} />
           </div>
         </div>
@@ -60,7 +85,7 @@ export function AcademyHubClient({
 
       <section className="phaseGrid" id="curriculum">
         {phases.map((phase) => {
-          const done = phase.lessons.filter((l) =>
+          const phaseDone = phase.lessons.filter((l) =>
             isComplete(phase.slug, l.slug)
           ).length;
           return (
@@ -74,7 +99,7 @@ export function AcademyHubClient({
               </span>
               <h3>{phase.tagline}</h3>
               <span className="phaseTag">
-                {done}/{phase.lessons.length} lessons complete
+                {phaseDone}/{phase.lessons.length} lessons complete
               </span>
               <p>{phase.description}</p>
               <span className="meta">
@@ -84,6 +109,6 @@ export function AcademyHubClient({
           );
         })}
       </section>
-    </>
+    </AcademyShell>
   );
 }

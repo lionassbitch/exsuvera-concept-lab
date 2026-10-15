@@ -34,11 +34,19 @@ test("renders LAB Academy hub and a lesson", async () => {
   assert.match(hubHtml, /LAB Academy/i);
   assert.match(hubHtml, /sharpen my vision/i);
   assert.match(hubHtml, /Orientation/);
-  assert.match(hubHtml, /backend progress/i);
+  assert.match(hubHtml, /academy backend/i);
 
   const lesson = await render("/academy/orientation/uncertainty-audit");
   assert.equal(lesson.status, 200);
   const lessonHtml = await lesson.text();
   assert.match(lessonHtml, /The uncertainty audit/);
   assert.match(lessonHtml, /Save deliverable|Deliverable/i);
+});
+
+test("renders LAB Academy deliverables library", async () => {
+  const res = await render("/academy/deliverables");
+  assert.equal(res.status, 200);
+  const html = await res.text();
+  assert.match(html, /Deliverables/i);
+  assert.match(html, /Export Markdown|library/i);
 });

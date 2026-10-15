@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAcademy } from "./AcademyProvider";
 
 export function ExerciseWorkspace({
@@ -19,11 +19,15 @@ export function ExerciseWorkspace({
   const { ready, getDeliverable, saveDeliverable, markComplete, isComplete } =
     useAcademy();
   const [body, setBody] = useState("");
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">(
-    "idle"
-  );
+  const [status, setStatus] = useState<
+    "idle" | "saving" | "saved" | "error" | "autosaved"
+  >("idle");
   const [error, setError] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
   const complete = isComplete(phaseSlug, lessonSlug);
+  const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bodyRef = useRef(body);
+  bodyRef.current = body;
 
   useEffect(() => {
     if (!ready) return;
@@ -31,7 +35,10 @@ export function ExerciseWorkspace({
     (async () => {
       try {
         const existing = await getDeliverable(phaseSlug, lessonSlug);
-        if (!cancelled && existing?.body) setBody(existing.body);
+        if (!cancelled && existing?.body) {
+          setBody(existing.body);
+          setDirty(false);
+        }
       } catch {
         // empty draft is fine
       }
@@ -41,6 +48,28 @@ export function ExerciseWorkspace({
     };
   }, [ready, getDeliverable, phaseSlug, lessonSlug]);
 
+  useEffect(() => {
+    if (!dirty || !body.trim() || !ready) return;
+    if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = setTimeout(async () => {
+      try {
+        await saveDeliverable({
+          phaseSlug,
+          lessonSlug,
+          title,
+          body: bodyRef.current,
+        });
+        setStatus("autosaved");
+        setDirty(false);
+      } catch {
+        // manual save still available
+      }
+    }, 1800);
+    return () => {
+      if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+    };
+  }, [dirty, body, ready, phaseSlug, lessonSlug, title, saveDeliverable]);
+
   async function onSave() {
     setStatus("saving");
     setError(null);
@@ -48,6 +77,7 @@ export function ExerciseWorkspace({
       await saveDeliverable({ phaseSlug, lessonSlug, title, body });
       if (!complete) await markComplete(phaseSlug, lessonSlug);
       setStatus("saved");
+      setDirty(false);
     } catch (err) {
       setStatus("error");
       setError(err instanceof Error ? err.message : "Could not save");
@@ -58,8 +88,12 @@ export function ExerciseWorkspace({
     setStatus("saving");
     setError(null);
     try {
+      if (body.trim()) {
+        await saveDeliverable({ phaseSlug, lessonSlug, title, body });
+      }
       await markComplete(phaseSlug, lessonSlug);
       setStatus("saved");
+      setDirty(false);
     } catch (err) {
       setStatus("error");
       setError(err instanceof Error ? err.message : "Could not mark complete");
@@ -79,10 +113,12 @@ export function ExerciseWorkspace({
         value={body}
         onChange={(e) => {
           setBody(e.target.value);
-          if (status === "saved") setStatus("idle");
+          setDirty(true);
+          if (status === "saved" || status === "autosaved") setStatus("idle");
         }}
-        placeholder="Write your deliverable here. It saves to the LAB Academy backend."
+        placeholder="Write your deliverable here. Autosaves to the LAB Academy backend."
         rows={8}
+        aria-describedby={`deliverable-status-${lessonSlug}`}
       />
       <div className="acts">
         <button
@@ -101,14 +137,18 @@ export function ExerciseWorkspace({
         >
           {complete ? "Lesson complete" : "Mark lesson complete"}
         </button>
-        <small>
+        <small id={`deliverable-status-${lessonSlug}`}>
           {status === "saved"
-            ? "Saved to backend"
-            : status === "error"
-              ? error
-              : complete
-                ? "Completed"
-                : "Backend-backed · guest or ChatGPT identity"}
+            ? "Saved · lesson complete"
+            : status === "autosaved"
+              ? "Autosaved"
+              : status === "error"
+                ? error
+                : complete
+                  ? "Completed"
+                  : dirty
+                    ? "Unsaved changes"
+                    : "Backend-backed · autosave on"}
         </small>
       </div>
     </div>

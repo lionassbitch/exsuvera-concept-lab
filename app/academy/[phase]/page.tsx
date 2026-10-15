@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAllPhases, getPhase } from "../../../content/academy/curriculum";
 import { PhaseLessonList } from "../PhaseLessonList";
+import { PhaseShell } from "../PhaseShell";
 
 type Props = { params: Promise<{ phase: string }> };
 
@@ -26,36 +27,31 @@ export default async function PhasePage({ params }: Props) {
 
   return (
     <main className="academyPage">
-      <nav className="pocNav">
-        <Link href="/academy">← LAB Academy</Link>
-        <b>
-          {phase.number} / {phase.title.toUpperCase()}
-        </b>
-        <Link href="#lessons">Lessons</Link>
-      </nav>
+      <PhaseShell>
+        <section className="phaseHero">
+          <p className="tag">Phase {phase.number}</p>
+          <h1>
+            {phase.title}.
+            <br />
+            <em>{phase.tagline}</em>
+          </h1>
+          <p className="lead">{phase.description}</p>
+          <div className="phaseOutcome">
+            <b>Phase outcome</b>
+            <p>{phase.outcome}</p>
+          </div>
+        </section>
 
-      <section className="phaseHero">
-        <p className="tag">Phase {phase.number}</p>
-        <h1>
-          {phase.title}.
-          <br />
-          <em>{phase.tagline}</em>
-        </h1>
-        <p className="lead">{phase.description}</p>
-        <div className="phaseOutcome">
-          <b>Phase outcome</b>
-          <p>{phase.outcome}</p>
-        </div>
-      </section>
-
-      <PhaseLessonList
-        phaseSlug={phase.slug}
-        phaseNumber={phase.number}
-        lessons={phase.lessons}
-      />
+        <PhaseLessonList
+          phaseSlug={phase.slug}
+          phaseNumber={phase.number}
+          lessons={phase.lessons}
+        />
+      </PhaseShell>
 
       <footer className="source">
         <Link href="/academy">All phases</Link>
+        <Link href="/academy/deliverables">Deliverables</Link>
         <span>Exsuvera × LAB</span>
       </footer>
     </main>

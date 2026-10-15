@@ -98,3 +98,33 @@ test("academy API rejects missing learner id", async () => {
   );
   assert.equal(res.status, 401);
 });
+
+test("academy health endpoint reports service status", async () => {
+  const worker = await loadWorker();
+  const res = await worker.fetch(
+    new Request("http://localhost/api/academy/health", {
+      headers: { accept: "application/json" },
+    }),
+    {},
+    { waitUntil() {}, passThroughOnException() {} }
+  );
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.ok, true);
+  assert.equal(body.service, "lab-academy");
+  assert.equal(body.lessons, 27);
+  assert.ok(body.backend === "d1" || body.backend === "memory");
+});
+
+test("academy session returns next lesson for a guest", async () => {
+  const worker = await loadWorker();
+  const id = guestId();
+  const res = await api(worker, "/api/academy/session", { id });
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.authenticated, true);
+  assert.equal(body.source, "guest");
+  assert.equal(body.totalLessons, 27);
+  assert.equal(body.next.phaseSlug, "orientation");
+  assert.equal(body.next.lessonSlug, "uncertainty-audit");
+});

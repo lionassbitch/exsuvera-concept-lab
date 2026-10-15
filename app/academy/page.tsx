@@ -9,7 +9,7 @@ import { AcademyHubClient } from "./AcademyHubClient";
 export const metadata = {
   title: "LAB Academy — Exsuvera",
   description:
-    "From unsure to execution: nine phases to sharpen your vision, reverse-plan your mission, and ship with proof. Frontend curriculum with backend progress.",
+    "From unsure to execution: nine phases to sharpen your vision, reverse-plan your mission, and ship with proof. Progress and deliverables backed by a production API.",
 };
 
 export default function AcademyPage() {
@@ -18,12 +18,6 @@ export default function AcademyPage() {
 
   return (
     <main className="academyPage">
-      <nav className="pocNav">
-        <Link href="/">← Concept Lab</Link>
-        <b>LAB / ACADEMY</b>
-        <Link href="#curriculum">Curriculum</Link>
-      </nav>
-
       <AcademyHubClient
         phases={phases}
         totalLessons={totalLessons}
@@ -36,7 +30,8 @@ export default function AcademyPage() {
       <footer className="source">
         <Link href="/scan">Blind Spot Scan</Link>
         <Link href="/blueprint">Blueprint Chat</Link>
-        <span>Exsuvera × LAB · FE + BE</span>
+        <Link href="/academy/deliverables">Deliverables</Link>
+        <span>Exsuvera × LAB</span>
       </footer>
     </main>
   );

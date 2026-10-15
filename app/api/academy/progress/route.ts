@@ -1,5 +1,9 @@
 import { resolveLearnerId } from "../../../lib/academy-auth";
-import { listProgress, upsertProgress } from "../../../lib/academy-store";
+import {
+  getLastBackendMode,
+  listProgress,
+  upsertProgress,
+} from "../../../lib/academy-store";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +18,7 @@ export async function GET(request: Request) {
     return Response.json({
       learnerId: identity.learnerId,
       source: identity.source,
-      backend: "academy-store",
+      backend: getLastBackendMode(),
       progress,
     });
   } catch (error) {

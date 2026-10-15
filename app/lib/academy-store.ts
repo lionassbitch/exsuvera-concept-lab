@@ -1,9 +1,10 @@
 /**
- * LAB Academy persistence.
+ * LAB Academy persistence — production-oriented write-through store.
  *
- * Primary: in-memory store (works in Node tests + Worker isolates).
- * Optional: Cloudflare D1 when the `cloudflare:workers` binding is available
- * (loaded dynamically so Node's test runner never sees a static import).
+ * - Always writes to in-memory (Worker-isolate) store
+ * - Also writes to Cloudflare D1 when the binding is healthy
+ * - Reads prefer D1, then merge/fallback to memory
+ * - Dynamic import of cloudflare:workers so Node tests stay clean
  */
 
 export type ProgressRow = {
@@ -20,6 +21,8 @@ export type DeliverableRow = {
   body: string;
   updatedAt: string;
 };
+
+export type BackendMode = "d1" | "memory";
 
 type ProgressKey = string;
 type DeliverableKey = string;
@@ -50,19 +53,21 @@ type D1Like = {
       run: () => Promise<unknown>;
     };
   };
-  exec: (query: string) => Promise<unknown>;
 };
 
 let d1Ready: Promise<D1Like | null> | null = null;
 let schemaReady: Promise<void> | null = null;
+let lastBackend: BackendMode = "memory";
+
+export function getLastBackendMode(): BackendMode {
+  return lastBackend;
+}
 
 async function getD1(): Promise<D1Like | null> {
   if (!d1Ready) {
     d1Ready = (async () => {
       try {
-        const mod = await import(
-          /* @vite-ignore */ "cloudflare:workers"
-        );
+        const mod = await import(/* @vite-ignore */ "cloudflare:workers");
         const db = (mod as { env?: { DB?: D1Like } }).env?.DB;
         return db ?? null;
       } catch {
@@ -80,7 +85,6 @@ async function runSql(db: D1Like, query: string) {
 async function ensureD1Schema(db: D1Like) {
   if (!schemaReady) {
     schemaReady = (async () => {
-      // Local Miniflare D1 rejects multi-statement exec batches — run one at a time.
       await runSql(
         db,
         `CREATE TABLE IF NOT EXISTS academy_progress (
@@ -124,31 +128,20 @@ async function ensureD1Schema(db: D1Like) {
   await schemaReady;
 }
 
-/** Prefer D1 when healthy; otherwise fall back to memory so the product still works. */
 async function getHealthyD1(): Promise<D1Like | null> {
   const db = await getD1();
   if (!db) return null;
   try {
     await ensureD1Schema(db);
+    lastBackend = "d1";
     return db;
   } catch {
+    lastBackend = "memory";
     return null;
   }
 }
 
-export async function listProgress(learnerId: string): Promise<ProgressRow[]> {
-  const db = await getHealthyD1();
-  if (db) {
-    const { results } = await db
-      .prepare(
-        `SELECT phase_slug as phaseSlug, lesson_slug as lessonSlug, status, completed_at as completedAt
-         FROM academy_progress WHERE learner_id = ?`
-      )
-      .bind(learnerId)
-      .all<ProgressRow>();
-    return results;
-  }
-
+function memoryProgress(learnerId: string): ProgressRow[] {
   return [...progressStore.values()]
     .filter((row) => row.learnerId === learnerId)
     .map(({ phaseSlug, lessonSlug, status, completedAt }) => ({
@@ -157,6 +150,64 @@ export async function listProgress(learnerId: string): Promise<ProgressRow[]> {
       status,
       completedAt,
     }));
+}
+
+function memoryDeliverables(learnerId: string): DeliverableRow[] {
+  return [...deliverableStore.values()]
+    .filter((row) => row.learnerId === learnerId)
+    .map(({ phaseSlug, lessonSlug, title, body, updatedAt }) => ({
+      phaseSlug,
+      lessonSlug,
+      title,
+      body,
+      updatedAt,
+    }));
+}
+
+export async function probeBackend(): Promise<{
+  mode: BackendMode;
+  d1: boolean;
+  schemaOk: boolean;
+}> {
+  const db = await getD1();
+  if (!db) {
+    lastBackend = "memory";
+    return { mode: "memory", d1: false, schemaOk: false };
+  }
+  try {
+    await ensureD1Schema(db);
+    lastBackend = "d1";
+    return { mode: "d1", d1: true, schemaOk: true };
+  } catch {
+    lastBackend = "memory";
+    return { mode: "memory", d1: true, schemaOk: false };
+  }
+}
+
+export async function listProgress(learnerId: string): Promise<ProgressRow[]> {
+  const db = await getHealthyD1();
+  if (db) {
+    try {
+      const { results } = await db
+        .prepare(
+          `SELECT phase_slug as phaseSlug, lesson_slug as lessonSlug, status, completed_at as completedAt
+           FROM academy_progress WHERE learner_id = ?`
+        )
+        .bind(learnerId)
+        .all<ProgressRow>();
+      // Hydrate memory from D1 so isolate stays consistent
+      for (const row of results) {
+        progressStore.set(progressKey(learnerId, row.phaseSlug, row.lessonSlug), {
+          ...row,
+          learnerId,
+        });
+      }
+      return results;
+    } catch {
+      lastBackend = "memory";
+    }
+  }
+  return memoryProgress(learnerId);
 }
 
 export async function upsertProgress(input: {
@@ -174,31 +225,35 @@ export async function upsertProgress(input: {
     completedAt: now,
   };
 
-  const db = await getHealthyD1();
-  if (db) {
-    await db
-      .prepare(
-        `INSERT INTO academy_progress (learner_id, phase_slug, lesson_slug, status, completed_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?)
-         ON CONFLICT(learner_id, phase_slug, lesson_slug)
-         DO UPDATE SET status = excluded.status, completed_at = excluded.completed_at, updated_at = excluded.updated_at`
-      )
-      .bind(
-        input.learnerId,
-        input.phaseSlug,
-        input.lessonSlug,
-        status,
-        now,
-        now
-      )
-      .run();
-    return row;
-  }
-
   progressStore.set(
     progressKey(input.learnerId, input.phaseSlug, input.lessonSlug),
     { ...row, learnerId: input.learnerId }
   );
+
+  const db = await getHealthyD1();
+  if (db) {
+    try {
+      await db
+        .prepare(
+          `INSERT INTO academy_progress (learner_id, phase_slug, lesson_slug, status, completed_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?)
+           ON CONFLICT(learner_id, phase_slug, lesson_slug)
+           DO UPDATE SET status = excluded.status, completed_at = excluded.completed_at, updated_at = excluded.updated_at`
+        )
+        .bind(
+          input.learnerId,
+          input.phaseSlug,
+          input.lessonSlug,
+          status,
+          now,
+          now
+        )
+        .run();
+    } catch {
+      lastBackend = "memory";
+    }
+  }
+
   return row;
 }
 
@@ -209,14 +264,25 @@ export async function getDeliverable(
 ): Promise<DeliverableRow | null> {
   const db = await getHealthyD1();
   if (db) {
-    return db
-      .prepare(
-        `SELECT phase_slug as phaseSlug, lesson_slug as lessonSlug, title, body, updated_at as updatedAt
-         FROM academy_deliverables
-         WHERE learner_id = ? AND phase_slug = ? AND lesson_slug = ?`
-      )
-      .bind(learnerId, phaseSlug, lessonSlug)
-      .first<DeliverableRow>();
+    try {
+      const row = await db
+        .prepare(
+          `SELECT phase_slug as phaseSlug, lesson_slug as lessonSlug, title, body, updated_at as updatedAt
+           FROM academy_deliverables
+           WHERE learner_id = ? AND phase_slug = ? AND lesson_slug = ?`
+        )
+        .bind(learnerId, phaseSlug, lessonSlug)
+        .first<DeliverableRow>();
+      if (row) {
+        deliverableStore.set(deliverableKey(learnerId, phaseSlug, lessonSlug), {
+          ...row,
+          learnerId,
+        });
+        return row;
+      }
+    } catch {
+      lastBackend = "memory";
+    }
   }
 
   return (
@@ -230,25 +296,30 @@ export async function listDeliverables(
 ): Promise<DeliverableRow[]> {
   const db = await getHealthyD1();
   if (db) {
-    const { results } = await db
-      .prepare(
-        `SELECT phase_slug as phaseSlug, lesson_slug as lessonSlug, title, body, updated_at as updatedAt
-         FROM academy_deliverables WHERE learner_id = ?`
-      )
-      .bind(learnerId)
-      .all<DeliverableRow>();
-    return results;
+    try {
+      const { results } = await db
+        .prepare(
+          `SELECT phase_slug as phaseSlug, lesson_slug as lessonSlug, title, body, updated_at as updatedAt
+           FROM academy_deliverables WHERE learner_id = ?
+           ORDER BY updated_at DESC`
+        )
+        .bind(learnerId)
+        .all<DeliverableRow>();
+      for (const row of results) {
+        deliverableStore.set(
+          deliverableKey(learnerId, row.phaseSlug, row.lessonSlug),
+          { ...row, learnerId }
+        );
+      }
+      return results;
+    } catch {
+      lastBackend = "memory";
+    }
   }
 
-  return [...deliverableStore.values()]
-    .filter((row) => row.learnerId === learnerId)
-    .map(({ phaseSlug, lessonSlug, title, body, updatedAt }) => ({
-      phaseSlug,
-      lessonSlug,
-      title,
-      body,
-      updatedAt,
-    }));
+  return memoryDeliverables(learnerId).sort((a, b) =>
+    (b.updatedAt ?? "").localeCompare(a.updatedAt ?? "")
+  );
 }
 
 export async function upsertDeliverable(input: {
@@ -267,31 +338,35 @@ export async function upsertDeliverable(input: {
     updatedAt: now,
   };
 
-  const db = await getHealthyD1();
-  if (db) {
-    await db
-      .prepare(
-        `INSERT INTO academy_deliverables (learner_id, phase_slug, lesson_slug, title, body, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(learner_id, phase_slug, lesson_slug)
-         DO UPDATE SET title = excluded.title, body = excluded.body, updated_at = excluded.updated_at`
-      )
-      .bind(
-        input.learnerId,
-        input.phaseSlug,
-        input.lessonSlug,
-        input.title,
-        input.body,
-        now,
-        now
-      )
-      .run();
-    return row;
-  }
-
   deliverableStore.set(
     deliverableKey(input.learnerId, input.phaseSlug, input.lessonSlug),
     { ...row, learnerId: input.learnerId }
   );
+
+  const db = await getHealthyD1();
+  if (db) {
+    try {
+      await db
+        .prepare(
+          `INSERT INTO academy_deliverables (learner_id, phase_slug, lesson_slug, title, body, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(learner_id, phase_slug, lesson_slug)
+           DO UPDATE SET title = excluded.title, body = excluded.body, updated_at = excluded.updated_at`
+        )
+        .bind(
+          input.learnerId,
+          input.phaseSlug,
+          input.lessonSlug,
+          input.title,
+          input.body,
+          now,
+          now
+        )
+        .run();
+    } catch {
+      lastBackend = "memory";
+    }
+  }
+
   return row;
 }

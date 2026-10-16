@@ -5,8 +5,9 @@ const LEARNER_HEADER = "x-academy-learner-id";
 
 /**
  * Resolve the academy learner id.
- * Prefer ChatGPT workspace identity when present; otherwise accept the
- * client-supplied guest id header (uuid stored in localStorage).
+ * Authenticated ChatGPT identity is derived only from trusted server-side
+ * identity. The client-supplied header may identify a guest but MUST NOT
+ * impersonate the reserved "cg:" namespace.
  */
 export async function resolveLearnerId(
   request?: Request
@@ -34,11 +35,9 @@ export async function resolveLearnerId(
   return null;
 }
 
+/** Validate only externally supplied guest ids; never accept ChatGPT ids. */
 export function isValidLearnerId(value: string) {
-  return (
-    /^guest:[A-Za-z0-9_-]{8,80}$/.test(value) ||
-    /^cg:[^\s]{3,320}$/i.test(value)
-  );
+  return /^guest:[A-Za-z0-9_-]{8,80}$/.test(value);
 }
 
 export { LEARNER_HEADER };

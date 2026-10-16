@@ -98,3 +98,36 @@ test("academy API rejects missing learner id", async () => {
   );
   assert.equal(res.status, 401);
 });
+
+test("academy API rejects a forged ChatGPT learner identity", async () => {
+  const worker = await loadWorker();
+  const forgedId = "cg:another-user@example.com";
+
+  for (const path of ["/api/academy/progress", "/api/academy/deliverables"]) {
+    const get = await api(worker, path, { id: forgedId });
+    assert.equal(get.status, 401, `${path} must reject forged identity on GET`);
+  }
+
+  const postProgress = await api(worker, "/api/academy/progress", {
+    method: "POST",
+    id: forgedId,
+    body: {
+      phaseSlug: "orientation",
+      lessonSlug: "uncertainty-audit",
+      status: "completed",
+    },
+  });
+  assert.equal(postProgress.status, 401);
+
+  const postDeliverable = await api(worker, "/api/academy/deliverables", {
+    method: "POST",
+    id: forgedId,
+    body: {
+      phaseSlug: "mission",
+      lessonSlug: "mission-workshop",
+      title: "Must not overwrite another account",
+      body: "Blocked",
+    },
+  });
+  assert.equal(postDeliverable.status, 401);
+});

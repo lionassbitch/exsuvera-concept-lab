@@ -7,8 +7,9 @@ const sans = Geist({ variable: "--sans", subsets: ["latin"] });
 const mono = Geist_Mono({ variable: "--mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Concept Lab — Thyself + Blueprint Chat",
-  description: "Proof-of-concept websites and strategic SWOT reports for Thyself and Blueprint Chat.",
+  title: "Exsuvera Concept Lab — Lion Ass Bitch",
+  description:
+    "Origins Bible, LAB Academy, Blind Spot Scan, Thyself, and Blueprint Chat — the Exsuvera / Lion Ass Bitch house.",
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {

@@ -27,6 +27,30 @@ test("renders the interactive prototype route", async () => {
   assert.match(html, /Speak your answer/);
 });
 
+test("renders the Origins Bible hub and a section", async () => {
+  const hub = await render("/bible");
+  assert.equal(hub.status, 200);
+  const hubHtml = await hub.text();
+  assert.match(hubHtml, /Origins Bible/i);
+  assert.match(hubHtml, /The word/i);
+  assert.match(hubHtml, /Pryde/);
+  assert.match(hubHtml, /Anput/);
+  assert.match(hubHtml, /This is not a brand/i);
+
+  const origins = await render("/bible/origins");
+  assert.equal(origins.status, 200);
+  const originsHtml = await origins.text();
+  assert.match(originsHtml, /word that grew teeth/i);
+  assert.match(originsHtml, /Lion/);
+
+  const sources = await render("/bible/sources");
+  assert.equal(sources.status, 200);
+  const sourcesHtml = await sources.text();
+  assert.match(sourcesHtml, /ChatGPT/);
+  assert.match(sourcesHtml, /Claude/);
+  assert.match(sourcesHtml, /The Crown from Below/);
+});
+
 test("renders LAB Academy hub and a lesson", async () => {
   const hub = await render("/academy");
   assert.equal(hub.status, 200);

@@ -49,6 +49,9 @@ test("renders the Origins Bible hub and a section", async () => {
   assert.match(sourcesHtml, /ChatGPT/);
   assert.match(sourcesHtml, /Claude/);
   assert.match(sourcesHtml, /The Crown from Below/);
+  assert.match(sourcesHtml, /Notice to Quit/);
+  assert.match(sourcesHtml, /due diligence/i);
+  assert.match(sourcesHtml, /data export is ready/i);
 });
 
 test("renders LAB Academy hub and a lesson", async () => {

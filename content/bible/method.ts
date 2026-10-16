@@ -79,6 +79,14 @@ export const method: BibleSection = {
     },
     {
       type: "h2",
+      text: "What the recovered chats prove",
+    },
+    {
+      type: "p",
+      text: "The October 9 ChatGPT and Claude dumps are a workbench in the wild. Exact word. Exact frame. Clear record. One brick of survival paperwork, then one brick of a scene. The same Gate 62 method, used on a Tuesday, whether the object is a lease draft or a title card. Do not confuse the method with the private files. The method is public. The files are not.",
+    },
+    {
+      type: "h2",
       text: "How this maps onto LAB Academy",
     },
     {

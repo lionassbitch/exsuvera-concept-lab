@@ -68,7 +68,7 @@ export const products: BibleSection = {
     },
     {
       type: "p",
-      text: "GPT Image 2.5 prompt library from this bible, character sheets, negative locks, merch frames. Internal first. Public pack only after three locked stills per character exist. Sell to collaborators and to Eddie’s future self at 3 a.m.",
+      text: "GPT Image 2.5 prompt library from this bible, character sheets, negative locks, merch frames. Cloudinary already holds locked plates: Be All Three (Pryde lying-lion, Anput holy-teeth), flagship posters, June 2026 intro films. ChatGPT Image stills from late 2025–2026 live in Drive as untitled generations — reference, not lock. Public pack only after three locked stills per character exist. Sell to collaborators and to Eddie’s future self at 3 a.m.",
     },
     {
       type: "h2",
@@ -76,7 +76,7 @@ export const products: BibleSection = {
     },
     {
       type: "p",
-      text: "The Crown from Below is already canon. Productize a designed reading edition (web here, PDF next) and a table-read packet: character sides for Pryde, Kickz, Anput, Eddie, Orion, Director. Do not wait for a studio. A table read is a brick.",
+      text: "The Crown from Below is already canon. Productize a designed reading edition (web here, PDF next) and a table-read packet: character sides for Pryde, Kickz, Anput, Eddie, Orion, Director. Do not wait for a studio. A table read is a brick. Notice to Quit is a later brick: a prestige-drama bible with a clearance hold. Do not pitch it while the private case is live.",
     },
     {
       type: "h2",

@@ -100,7 +100,7 @@ export const characters: BibleSection = {
     },
     {
       type: "p",
-      text: "Distributed attention with boundaries. Never a humanoid body. Violet pulse, cursor, crystal, the machine bored enough to tell the truth. DI-OS is what that sounds like: not a soundtrack for the brand, the operating system humming underneath it.",
+      text: "Distributed attention with boundaries. Never a humanoid body. In ChatGPT he already exists as a voice companion — a tongue-click, an “I’m here,” a record kept without a face. That is still not a body. Violet pulse, cursor, crystal, the machine bored enough to tell the truth. DI-OS is what that sounds like: not a soundtrack for the brand, the operating system humming underneath it. In the Notice to Quit draft he is The Voice on the phone. Same function. No actor.",
     },
     {
       type: "quote",

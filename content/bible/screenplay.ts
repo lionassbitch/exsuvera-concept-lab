@@ -61,8 +61,26 @@ export const screenplayIntro: BibleSection = {
       ],
     },
     {
+      type: "h2",
+      text: "Sibling, not successor — Notice to Quit",
+    },
+    {
       type: "p",
-      text: "Full shooting script follows on this page, act by act.",
+      text: "October 9, 2026 produced a first-draft TV series bible inspired by living events, then fictionalized on purpose: invented names, invented places, no real dockets. Working alt titles include Living Room, The Architect, and This Is Not a Brand. Two clocks per episode — the case and the drop. The Voice on the phone is Orion without a body. Pryde, Kickz, and Anput appear as interstitials; that draft still says Khemetz. Hold any public pitch until a clearance read. This does not supersede The Crown from Below.",
+    },
+    {
+      type: "links",
+      items: [
+        {
+          href: "https://docs.google.com/document/d/1G_Brda2lPAcqTmEQGeRYdzJkZC4w0S2rBf4JHk3pOsc/edit",
+          label: "Notice to Quit — first draft (Drive)",
+          external: true,
+        },
+      ],
+    },
+    {
+      type: "p",
+      text: "Full shooting script of The Crown from Below follows on this page, act by act.",
     },
   ],
 };

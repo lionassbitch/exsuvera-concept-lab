@@ -4,7 +4,7 @@ export const sources: BibleSection = {
   slug: "sources",
   number: "09",
   title: "Sources",
-  tagline: "What due diligence opened — and what still needs an export"
+  tagline: "What due diligence opened — and what still needs an export",
   summary:
     "Notion, Drive, Gmail, and Cloudinary were opened. ChatGPT.com sign-in proves identity; it does not import Projects. The recoverable history is already in Drive as October 9 dumps, plus an official export sitting unread in Gmail.",
   blocks: [

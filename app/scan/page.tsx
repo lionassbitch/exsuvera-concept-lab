@@ -45,7 +45,7 @@ export default async function ScanPage() {
   return (
     <main className="scanPage">
       <nav className="pocNav">
-        <Link href="/">← Concept Lab</Link>
+        <Link href="/lab">← Concept Lab</Link>
         <b>BLIND SPOT / SCAN</b>
         <a href="#corpus">Corpus</a>
       </nav>

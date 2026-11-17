@@ -8,8 +8,21 @@ async function render(path = "/") {
   return worker.fetch(new Request(`http://localhost${path}`, { headers: { accept: "text/html" } }), {}, { waitUntil() {}, passThroughOnException() {} });
 }
 
-test("renders the concept lab", async () => {
+test("renders the Rich Demon$ homepage", async () => {
   const response = await render();
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /Rich Demon\$/);
+  assert.match(html, /Entitled 2 Equity/);
+  assert.match(html, /Enter the world/);
+  assert.match(html, /Scroll to explore/);
+  assert.match(html, /not configured/i);
+  assert.doesNotMatch(html, /spotify\.com|instagram\.com|youtube\.com/i);
+  assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
+});
+
+test("renders the concept lab", async () => {
+  const response = await render("/lab");
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /Concept Lab/i);

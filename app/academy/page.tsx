@@ -19,7 +19,7 @@ export default function AcademyPage() {
   return (
     <main className="academyPage">
       <nav className="pocNav">
-        <Link href="/">← Concept Lab</Link>
+        <Link href="/lab">← Concept Lab</Link>
         <b>LAB / ACADEMY</b>
         <Link href="#curriculum">Curriculum</Link>
       </nav>
